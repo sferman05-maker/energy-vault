@@ -7,6 +7,8 @@ import DrinkPage from './pages/DrinkPage'
 import Browse from './pages/Browse'
 import TopRated from './pages/TopRated'
 import Auth from './pages/Auth'
+import Profile from './pages/Profile'
+import ProtectedRoute from './lib/ProtectedRoute'
 import { ThemeProvider, useTheme } from './lib/ThemeContext'
 import { AuthProvider } from './lib/AuthContext'
 
@@ -23,6 +25,7 @@ function AppInner() {
           <Route path="/browse" element={<Browse />} />
           <Route path="/top-rated" element={<TopRated />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </div>
       <Footer />
