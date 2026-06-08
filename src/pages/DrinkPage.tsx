@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { drinks, brands } from '../lib/drinks'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 type Review = {
   id: string
   drink_id: string
+  user_id: string
   author: string
   rating: number
   comment: string
@@ -15,6 +17,7 @@ type Review = {
 function DrinkPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const drink = drinks.find(d => d.id === id)
   const brand = brands.find(b => b.slug === drink?.brandSlug)
@@ -23,7 +26,6 @@ function DrinkPage() {
   const calories = drink?.calories ?? brand?.calories
 
   const [reviews, setReviews] = useState<Review[]>([])
-  const [author, setAuthor] = useState('')
   const [comment, setComment] = useState('')
   const [rating, setRating] = useState(0)
   const [hoveredStar, setHoveredStar] = useState(0)
@@ -47,15 +49,14 @@ function DrinkPage() {
   }
 
   const handleSubmit = async () => {
-    if (!author || !comment || rating === 0) return
+    if (!user || !comment || rating === 0) return
     setSubmitting(true)
 
     const { error } = await supabase
       .from('reviews')
-      .insert([{ drink_id: id, author, rating, comment }])
+      .insert([{ drink_id: id, user_id: user.id, author: user.email, rating, comment }])
 
     if (!error) {
-      setAuthor('')
       setComment('')
       setRating(0)
       fetchReviews()
@@ -113,50 +114,58 @@ function DrinkPage() {
         </div>
       </div>
 
-      {/* Leave a Review */}
+      {/* Review Form or Sign In Prompt */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-10">
-        <h2 className="text-2xl font-bold text-white mb-6">Leave a Review</h2>
+        {user ? (
+          <>
+            <h2 className="text-2xl font-bold text-white mb-6">Leave a Review</h2>
 
-        <p className="text-gray-400 mb-2">Your Rating</p>
-        <div className="flex gap-2 mb-6">
-          {[1, 2, 3, 4, 5].map(star => (
+            <p className="text-gray-400 mb-2">Your Rating</p>
+            <div className="flex gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoveredStar(star)}
+                  onMouseLeave={() => setHoveredStar(0)}
+                  className="text-3xl"
+                  style={{ color: star <= (hoveredStar || rating) ? '#f59e0b' : '#4b5563' }}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              placeholder="Write your review..."
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              rows={4}
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 mb-4 focus:outline-none focus:border-yellow-400 resize-none"
+            />
+
             <button
-              key={star}
-              onClick={() => setRating(star)}
-              onMouseEnter={() => setHoveredStar(star)}
-              onMouseLeave={() => setHoveredStar(0)}
-              className="text-3xl"
-              style={{ color: star <= (hoveredStar || rating) ? '#f59e0b' : '#4b5563' }}
+              onClick={handleSubmit}
+              disabled={!comment || rating === 0 || submitting}
+              className="px-8 py-3 rounded-full font-bold text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: brand.color }}
             >
-              ★
+              {submitting ? 'Posting...' : 'Post Review'}
             </button>
-          ))}
-        </div>
-
-        <input
-          type="text"
-          placeholder="Your name"
-          value={author}
-          onChange={e => setAuthor(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 mb-4 focus:outline-none focus:border-yellow-400"
-        />
-
-        <textarea
-          placeholder="Write your review..."
-          value={comment}
-          onChange={e => setComment(e.target.value)}
-          rows={4}
-          className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 mb-4 focus:outline-none focus:border-yellow-400 resize-none"
-        />
-
-        <button
-          onClick={handleSubmit}
-          disabled={!author || !comment || rating === 0 || submitting}
-          className="px-8 py-3 rounded-full font-bold text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: brand.color }}
-        >
-          {submitting ? 'Posting...' : 'Post Review'}
-        </button>
+          </>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-2xl mb-3">⚡</p>
+            <h2 className="text-xl font-bold text-white mb-2">Want to leave a review?</h2>
+            <p className="text-gray-400 mb-6">Sign in to share your thoughts on this drink.</p>
+            <button
+              onClick={() => navigate('/auth')}
+              className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-6 py-3 rounded-xl transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Reviews List */}
