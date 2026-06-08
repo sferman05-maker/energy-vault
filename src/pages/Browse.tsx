@@ -79,8 +79,8 @@ function Browse() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredDrinks.map(drink => {
             const brand = brands.find(b => b.slug === drink.brandSlug)
-            const caffeine = drink.caffeine ?? brand?.caffeine
-            const calories = drink.calories ?? brand?.calories
+            const _caffeine = drink.caffeine ?? brand?.caffeine
+            const _calories = drink.calories ?? brand?.calories
             return (
               <div
                 key={drink.id}
