@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { drinks, brands } from '../lib/drinks'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { checkAndAwardBadges } from '../lib/badges'
 
 type Review = {
   id: string
@@ -60,6 +61,7 @@ function DrinkPage() {
       setComment('')
       setRating(0)
       fetchReviews()
+      checkAndAwardBadges(user.id)
     }
     setSubmitting(false)
   }

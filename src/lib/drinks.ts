@@ -26,11 +26,11 @@ export const brands: Brand[] = [
     ingredients: [{ name: "Caffeine", amount: "200mg" }, { name: "Alpha-GPC", amount: "150mg" }, { name: "NeuroFactor", amount: "100mg" }, { name: "L-Carnitine", amount: "1000mg" }, { name: "Taurine", amount: "1000mg" }, { name: "AstaGin", amount: "25mg" }, { name: "Vitamin C", amount: "90mg" }, { name: "Niacin (B3)", amount: "16mg" }, { name: "Vitamin B6", amount: "1.7mg" }, { name: "Vitamin B12", amount: "2.4mcg" }],
     website: "https://drinkghost.com/pages/energy" 
   },
-  { name: "BUM Energy", slug: "bum", description: "Clean energy. Sharper Mind. Zero Compromise. Made by champions, for champions.", color: "#f59e0b", emoji: "💪", logo: "/assets/bum-energy-logo.png", caffeine: 112, calories: 5-10, 
+  { name: "BUM Energy", slug: "bum", description: "Clean energy. Sharper Mind. Zero Compromise. Made by champions, for champions.", color: "#f59e0b", emoji: "💪", logo: "/assets/bum-energy-logo.png", caffeine: 112, calories: 5, 
     ingredients: [{ name: "Caffeine", amount: "112mg" }, { name: "Cognizin", amount: "250mg" }],
     website: "https://raw.rfrl.co/mm93r"
   },
-  { name: "3D Energy", slug: "3d", description: "", color: "#00bfff", emoji: "3️⃣", logo: "/assets/3d-logo.png", caffeine: 200, calories: 10-15, 
+  { name: "3D Energy", slug: "3d", description: "", color: "#00bfff", emoji: "3️⃣", logo: "/assets/3d-logo.png", caffeine: 200, calories: 10, 
     ingredients: [{ name: "Caffeine", amount: "200mg" }, { name: "Vitamin B12", amount: "100% DV" }], 
     website: "https://www.amazon.com/3D-Sugar-Free-Energy-Drink-Pre-Workout/dp/B0FJDYGY92/ref=sr_1_6?crid=2JH8FBBC8DIY4&dib=eyJ2IjoiMSJ9.UyYeMvH1xTfXYSOHRvgW7i-iPk2w1FLFO98ocQIx5Zz1zYQ94-DKWGYJ_34XjT8ckDmTfGc6Y_YB6gxH_V0zbFcOxbhf-9kIgTfbMBw41Sxdwk4Hdmuzyl2kFvEW6pXMsEJ8PWENcCxFksPGzsahLc-v8Y842qLbSavDeTUKLshBZidtN9R8ea6D4R3dO2ZaH6whu2T3AI7Py0pF1--2ag3o96mC8bfd9eTRPVpAuvY_Zr8AlovExg6Jy1aAEFVJ_7GcmtgucqR38lotj2KhW_L9q93AUXkKOM0Dv4AdDtk.wJmMVVyq1mT7ENplPpKmQoOHVyt5cZV5TM43DKhH728&dib_tag=se&keywords=3d%2Benergy&qid=1780524321&sprefix=3d%2Benergy%2Caps%2C415&sr=8-6&th=1"
   },
