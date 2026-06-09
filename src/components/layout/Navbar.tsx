@@ -12,7 +12,7 @@ function Navbar() {
         className="cursor-pointer hover:opacity-80 transition-opacity"
       >
         <img
-          src="/src/assets/energy-vault-logo.png"
+          src="/assets/energy-vault-logo.png"
           alt="EnergyVault"
           className="h-12 object-contain"
           />

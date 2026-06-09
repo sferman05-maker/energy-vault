@@ -109,7 +109,7 @@ function Home() {
       <div className="relative z-10 px-8 py-16">
         <div className="text-center mb-16">
           <img
-            src="/src/assets/energy-vault-logo.png"
+            src="/assets/energy-vault-logo.png"
             alt="EnergyVault"
             className="h-25 object-contain mx-auto mb-4"
           />
