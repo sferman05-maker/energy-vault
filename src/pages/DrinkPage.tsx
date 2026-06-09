@@ -32,10 +32,23 @@ function DrinkPage() {
   const [hoveredStar, setHoveredStar] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [newBadges, setNewBadges] = useState<string[]>([])
+  const [username, setUsername] = useState<string>('')
 
   useEffect(() => {
     fetchReviews()
   }, [id])
+
+  useEffect(() => {
+  if (user) {
+    supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => { if (data) setUsername(data.username) })
+  }
+}, [user])
 
   const fetchReviews = async () => {
     setLoading(true)
@@ -54,15 +67,16 @@ function DrinkPage() {
     setSubmitting(true)
 
     const { error } = await supabase
-      .from('reviews')
-      .insert([{ drink_id: id, user_id: user.id, author: user.email, rating, comment }])
+  .from('reviews')
+  .insert([{ drink_id: id, user_id: user.id, author: username || user.email, rating, comment }])
 
-    if (!error) {
-      setComment('')
-      setRating(0)
-      fetchReviews()
-      checkAndAwardBadges(user.id)
-    }
+      if (!error) {
+        setComment('')
+        setRating(0)
+        fetchReviews()
+        const earned = await checkAndAwardBadges(user.id)
+        if (earned.length > 0) setNewBadges(earned)
+      }
     setSubmitting(false)
   }
 
@@ -80,6 +94,24 @@ function DrinkPage() {
 
   return (
     <div className="px-8 py-12 max-w-4xl mx-auto">
+      {/* Badge notification toasts */}
+      {newBadges.length > 0 && (
+        <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+          {newBadges.map((badge, i) => (
+            <div
+              key={i}
+              className="bg-yellow-400 text-black px-6 py-4 rounded-2xl shadow-xl font-bold flex items-center gap-3 animate-bounce"
+            >
+              <span className="text-2xl">🏅</span>
+              <div>
+                <p className="text-xs uppercase tracking-wide">Badge Unlocked!</p>
+                <p className="text-lg">{badge}</p>
+              </div>
+              <button onClick={() => setNewBadges(prev => prev.filter((_, j) => j !== i))} className="ml-2 text-black/50 hover:text-black">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
       {/* Back Button */}
       <button
         onClick={() => navigate(`/brand/${drink.brandSlug}`)}

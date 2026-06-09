@@ -31,6 +31,7 @@ function Profile() {
   const [userBadges, setUserBadges] = useState<UserBadge[]>([])
   const [reviews, setReviews] = useState<Review[]>([])
   const [allBadges, setAllBadges] = useState<Badge[]>([])
+  const [username, setUsername] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -40,25 +41,27 @@ function Profile() {
   const fetchProfileData = async () => {
     setLoading(true)
 
-    const [{ data: ubData }, { data: rData }, { data: bData }] = await Promise.all([
+    const [{ data: ubData }, { data: rData }, { data: bData }, { data: pData }] = await Promise.all([
       supabase.from('user_badges').select('badge_id, earned_at, badges(id, name, description, icon_url)').eq('user_id', user!.id),
       supabase.from('reviews').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
       supabase.from('badges').select('*'),
+      supabase.from('profiles').select('username').eq('id', user!.id).single(),
     ])
 
     setUserBadges((ubData as unknown as UserBadge[]) ?? [])
     setReviews(rData ?? [])
     setAllBadges(bData ?? [])
+    if (pData) setUsername((pData as unknown as { username: string }).username)
     setLoading(false)
   }
 
   const earnedBadgeIds = new Set(userBadges.map(b => b.badge_id))
-  const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : 'N/A'
+  const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—'
   const brandsReviewed = new Set(reviews.map(r => drinks.find(d => d.id === r.drink_id)?.brandSlug).filter(Boolean)).size
 
   const card = `border rounded-2xl p-6 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`
   const label = `text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`
-  const value = `text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`
+  const val = `text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`
 
   if (loading) return <div className="text-center py-20 text-gray-500">Loading profile...</div>
 
@@ -69,10 +72,10 @@ function Profile() {
       <div className={`${card} mb-6 flex items-center justify-between`}>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center text-2xl font-bold text-black">
-            {user?.email?.[0].toUpperCase()}
+            {username?.[0]?.toUpperCase() ?? user?.email?.[0].toUpperCase()}
           </div>
           <div>
-            <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.email}</h1>
+            <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{username || user?.email}</h1>
             <p className={label}>Member since {new Date(user?.created_at ?? '').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
           </div>
         </div>
@@ -90,20 +93,21 @@ function Profile() {
           { label: 'Reviews', value: reviews.length },
           { label: 'Avg Rating', value: avgRating },
           { label: 'Brands Tried', value: brandsReviewed },
-          { label: 'Badges', value: userBadges.length },
+          { label: 'Badges', value: `${userBadges.length}/${allBadges.length}` },
         ].map(stat => (
           <div key={stat.label} className={`${card} text-center`}>
-            <p className={value}>{stat.value}</p>
+            <p className={val}>{stat.value}</p>
             <p className={label}>{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Badges */}
+      {/* Badges — always show all, locked/unlocked */}
       <div className={`${card} mb-6`}>
-        <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        <h2 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
           Badges <span className="text-yellow-400">({userBadges.length}/{allBadges.length})</span>
         </h2>
+        <p className={`${label} mb-4`}>Earn badges by reviewing drinks and exploring the vault.</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {allBadges.map(badge => {
             const earned = earnedBadgeIds.has(badge.id)
@@ -112,18 +116,25 @@ function Profile() {
                 key={badge.id}
                 className={`rounded-xl p-4 text-center border transition-all ${earned
                   ? isDark ? 'border-yellow-400 bg-yellow-400/10' : 'border-yellow-400 bg-yellow-50'
-                  : isDark ? 'border-gray-700 opacity-40' : 'border-gray-200 opacity-40'
+                  : isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'
                 }`}
               >
                 {badge.icon_url ? (
-                  <img src={badge.icon_url} alt={badge.name} className="w-12 h-12 mx-auto mb-2 object-contain" />
+                  <img
+                    src={badge.icon_url}
+                    alt={badge.name}
+                    className={`w-12 h-12 mx-auto mb-2 object-contain ${!earned ? 'grayscale opacity-40' : ''}`}
+                  />
                 ) : (
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-yellow-400/20 flex items-center justify-center text-2xl">
+                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center text-2xl ${earned ? 'bg-yellow-400/20' : isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     {earned ? '🏅' : '🔒'}
                   </div>
                 )}
-                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{badge.name}</p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{badge.description}</p>
+                <p className={`text-sm font-bold ${earned ? isDark ? 'text-white' : 'text-gray-900' : isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {badge.name}
+                </p>
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{badge.description}</p>
+                {earned && <p className="text-xs text-yellow-400 font-bold mt-2">✓ Earned</p>}
               </div>
             )
           })}
@@ -134,7 +145,10 @@ function Profile() {
       <div className={card}>
         <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Reviews</h2>
         {reviews.length === 0 ? (
-          <p className={label}>No reviews yet. Go try some drinks!</p>
+          <div className="text-center py-6">
+            <p className="text-4xl mb-3">🥤</p>
+            <p className={label}>No reviews yet. Go try some drinks!</p>
+          </div>
         ) : (
           <div className="flex flex-col gap-4">
             {reviews.slice(0, 5).map(review => {
