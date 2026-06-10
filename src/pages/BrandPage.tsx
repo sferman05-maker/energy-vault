@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { brands, drinks } from '../lib/drinks'
 import { useTheme } from '../lib/ThemeContext'
+import { supabase } from '../lib/supabase'
 
 function BrandPage() {
   const { slug } = useParams()
@@ -11,9 +12,34 @@ function BrandPage() {
   const brand = brands.find(b => b.slug === slug)
   const brandDrinks = drinks.filter(d => d.brandSlug === slug)
   const [search, setSearch] = useState('')
+  const [ratings, setRatings] = useState<Record<string, { avg: number; count: number }>>({})
+
   const filteredDrinks = brandDrinks.filter(drink =>
     drink.flavor.toLowerCase().includes(search.toLowerCase())
   )
+
+  useEffect(() => {
+    fetchRatings()
+  }, [])
+
+  const fetchRatings = async () => {
+    const { data, error } = await supabase.from('reviews').select('drink_id, rating')
+    if (error || !data) return
+
+    const grouped: Record<string, number[]> = {}
+    data.forEach(r => {
+      if (!grouped[r.drink_id]) grouped[r.drink_id] = []
+      grouped[r.drink_id].push(r.rating)
+    })
+
+    const result: Record<string, { avg: number; count: number }> = {}
+    Object.entries(grouped).forEach(([drinkId, ratingsArr]) => {
+      const avg = ratingsArr.reduce((sum, r) => sum + r, 0) / ratingsArr.length
+      result[drinkId] = { avg, count: ratingsArr.length }
+    })
+
+    setRatings(result)
+  }
 
   if (!brand) {
     return (
@@ -73,22 +99,36 @@ function BrandPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredDrinks.map(drink => (
-            <div
-              key={drink.id}
-              onClick={() => navigate(`/drink/${drink.id}`)}
-              className={`border rounded-2xl p-6 hover:border-yellow-400 transition-all hover:scale-105 cursor-pointer text-center ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'}`}
-            >
-              <img src={drink.image} alt={drink.flavor} className="w-full h-48 object-contain mb-4" />
-              <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{drink.flavor}</h3>
+          {filteredDrinks.map(drink => {
+            const rating = ratings[drink.id]
+            return (
               <div
-                className="mt-4 inline-block px-4 py-1 rounded-full text-white text-sm font-bold"
-                style={{ backgroundColor: brand.color }}
+                key={drink.id}
+                onClick={() => navigate(`/drink/${drink.id}`)}
+                className={`border rounded-2xl p-6 hover:border-yellow-400 transition-all hover:scale-105 cursor-pointer text-center ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'}`}
               >
-                View Details →
+                <img src={drink.image} alt={drink.flavor} className="w-full h-48 object-contain mb-4" />
+                <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{drink.flavor}</h3>
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  {rating ? (
+                    <>
+                      <span className="text-yellow-400">★</span>
+                      <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{rating.avg.toFixed(1)}</span>
+                      <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>({rating.count})</span>
+                    </>
+                  ) : (
+                    <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>No reviews yet</span>
+                  )}
+                </div>
+                <div
+                  className="mt-4 inline-block px-4 py-1 rounded-full text-white text-sm font-bold"
+                  style={{ backgroundColor: brand.color }}
+                >
+                  View Details →
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
