@@ -1,12 +1,37 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { drinks, brands } from '../lib/drinks'
+import { supabase } from '../lib/supabase'
 
 function Browse() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [selectedBrand, setSelectedBrand] = useState('all')
   const [sortBy, setSortBy] = useState('default')
+  const [ratings, setRatings] = useState<Record<string, { avg: number; count: number }>>({})
+
+  useEffect(() => {
+    fetchRatings()
+  }, [])
+
+  const fetchRatings = async () => {
+    const { data, error } = await supabase.from('reviews').select('drink_id, rating')
+    if (error || !data) return
+
+    const grouped: Record<string, number[]> = {}
+    data.forEach(r => {
+      if (!grouped[r.drink_id]) grouped[r.drink_id] = []
+      grouped[r.drink_id].push(r.rating)
+    })
+
+    const result: Record<string, { avg: number; count: number }> = {}
+    Object.entries(grouped).forEach(([drinkId, ratingsArr]) => {
+      const avg = ratingsArr.reduce((sum, r) => sum + r, 0) / ratingsArr.length
+      result[drinkId] = { avg, count: ratingsArr.length }
+    })
+
+    setRatings(result)
+  }
 
   const filteredDrinks = drinks
     .filter(drink => {
@@ -29,6 +54,7 @@ function Browse() {
       if (sortBy === 'caffeine-high') return caffeineB - caffeineA
       if (sortBy === 'caffeine-low') return caffeineA - caffeineB
       if (sortBy === 'calories-low') return caloriesA - caloriesB
+      if (sortBy === 'rating-high') return (ratings[b.id]?.avg ?? 0) - (ratings[a.id]?.avg ?? 0)
       return 0
     })
 
@@ -65,6 +91,7 @@ function Browse() {
           <option value="caffeine-high">Caffeine: High to Low</option>
           <option value="caffeine-low">Caffeine: Low to High</option>
           <option value="calories-low">Calories: Low to High</option>
+          <option value="rating-high">Rating: High to Low</option>
         </select>
       </div>
 
@@ -79,6 +106,7 @@ function Browse() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredDrinks.map(drink => {
             const brand = brands.find(b => b.slug === drink.brandSlug)
+            const rating = ratings[drink.id]
             return (
               <div
                 key={drink.id}
@@ -92,6 +120,17 @@ function Browse() {
                 />
                 <p className="text-xs font-bold mb-1" style={{ color: brand?.color }}>{brand?.name}</p>
                 <h3 className="text-white font-bold text-lg">{drink.flavor}</h3>
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  {rating ? (
+                    <>
+                      <span className="text-yellow-400">★</span>
+                      <span className="text-white font-bold text-sm">{rating.avg.toFixed(1)}</span>
+                      <span className="text-gray-500 text-xs">({rating.count})</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-600 text-xs">No reviews yet</span>
+                  )}
+                </div>
                 <div
                   className="mt-4 inline-block px-4 py-1 rounded-full text-white text-sm font-bold"
                   style={{ backgroundColor: brand?.color }}
