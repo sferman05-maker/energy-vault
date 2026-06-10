@@ -22,7 +22,7 @@ export type Drink = {
 }
 
 export const brands: Brand[] = [
-  { name: "Ghost Energy", slug: "ghost", description: "Legendary flavors, transparent ingredients, and zero sugar. Feel good energy with authentic flavors and no BS.", color: "#8b5cf6", emoji: "👻", logo: "/assets/ghost-energy-logo.png", caffeine: 200, calories: 5-10, 
+  { name: "Ghost Energy", slug: "ghost", description: "Legendary flavors, transparent ingredients, and zero sugar. Feel good energy with authentic flavors and no BS.", color: "#8b5cf6", emoji: "👻", logo: "/assets/ghost-energy-logo.png", caffeine: 200, calories: 10, 
     ingredients: [{ name: "Caffeine", amount: "200mg" }, { name: "Alpha-GPC", amount: "150mg" }, { name: "NeuroFactor", amount: "100mg" }, { name: "L-Carnitine", amount: "1000mg" }, { name: "Taurine", amount: "1000mg" }, { name: "AstaGin", amount: "25mg" }, { name: "Vitamin C", amount: "90mg" }, { name: "Niacin (B3)", amount: "16mg" }, { name: "Vitamin B6", amount: "1.7mg" }, { name: "Vitamin B12", amount: "2.4mcg" }],
     website: "https://drinkghost.com/pages/energy" 
   },
@@ -108,4 +108,7 @@ export const drinks: Drink[] = [
   { id: "reign-orange-dreamsicle", brandSlug: "reign", flavor: "Orange Dreamsicle", description: "", image: "/assets/reign-orange-dreamsicle.png" },
   { id: "reign-reignbow-sherbet", brandSlug: "reign", flavor: "Reignbow Sherbet", description: "", image: "/assets/reign-reignbow-sherbet.png" },
   { id: "reign-lilikoi-lychee", brandSlug: "reign", flavor: "Lilikoi Lychee", description: "", image: "/assets/reign-lilikoi-lychee.png" },
+  { id: "reign-cherry-limade", brandSlug: "reign", flavor: "Cherry Limade", description: "", image: "/assets/reign-cherry-limade.png" },
+  { id: "reign-razzle-berry", brandSlug: "reign", flavor: "Razzle Berry", description: "", image: "/assets/reign-razzle-berry.png" },
+  { id: "reign-tropical-storm", brandSlug: "reign", flavor: "Tropical Storm", description: "", image: "/assets/reign-tropical-storm.png" },
 ]
