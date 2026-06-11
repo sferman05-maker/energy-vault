@@ -4,6 +4,8 @@ import { drinks, brands } from '../lib/drinks'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { checkAndAwardBadges } from '../lib/badges'
+import StarRating from '../components/ui/StarRating'
+import RatingInput from '../components/ui/RatingInput'
 
 type Review = {
   id: string
@@ -29,7 +31,6 @@ function DrinkPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [comment, setComment] = useState('')
   const [rating, setRating] = useState(0)
-  const [hoveredStar, setHoveredStar] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [newBadges, setNewBadges] = useState<string[]>([])
@@ -40,15 +41,15 @@ function DrinkPage() {
   }, [id])
 
   useEffect(() => {
-  if (user) {
-    supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => { if (data) setUsername(data.username) })
-  }
-}, [user])
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => { if (data) setUsername(data.username) })
+    }
+  }, [user])
 
   const fetchReviews = async () => {
     setLoading(true)
@@ -67,16 +68,16 @@ function DrinkPage() {
     setSubmitting(true)
 
     const { error } = await supabase
-  .from('reviews')
-  .insert([{ drink_id: id, user_id: user.id, author: username || user.email, rating, comment }])
+      .from('reviews')
+      .insert([{ drink_id: id, user_id: user.id, author: username || user.email, rating, comment }])
 
-      if (!error) {
-        setComment('')
-        setRating(0)
-        fetchReviews()
-        const earned = await checkAndAwardBadges(user.id)
-        if (earned.length > 0) setNewBadges(earned)
-      }
+    if (!error) {
+      setComment('')
+      setRating(0)
+      fetchReviews()
+      const earned = await checkAndAwardBadges(user.id)
+      if (earned.length > 0) setNewBadges(earned)
+    }
     setSubmitting(false)
   }
 
@@ -141,7 +142,7 @@ function DrinkPage() {
               <p className="text-gray-400 text-sm">Calories</p>
             </div>
             <div className="bg-gray-900 rounded-xl px-6 py-4 text-center">
-              <p className="text-yellow-400 text-2xl font-bold">{avgRating}</p>
+              <p className="text-yellow-400 text-2xl font-bold">{avgRating}/10</p>
               <p className="text-gray-400 text-sm">Avg Rating</p>
             </div>
           </div>
@@ -155,19 +156,8 @@ function DrinkPage() {
             <h2 className="text-2xl font-bold text-white mb-6">Leave a Review</h2>
 
             <p className="text-gray-400 mb-2">Your Rating</p>
-            <div className="flex gap-2 mb-6">
-              {[1, 2, 3, 4, 5].map(star => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoveredStar(star)}
-                  onMouseLeave={() => setHoveredStar(0)}
-                  className="text-3xl"
-                  style={{ color: star <= (hoveredStar || rating) ? '#f59e0b' : '#4b5563' }}
-                >
-                  ★
-                </button>
-              ))}
+            <div className="mb-6">
+              <RatingInput rating={rating} onChange={setRating} />
             </div>
 
             <textarea
@@ -227,16 +217,9 @@ function DrinkPage() {
                     })}
                   </p>
                 </div>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <span
-                      key={star}
-                      className="text-xl"
-                      style={{ color: star <= review.rating ? '#f59e0b' : '#4b5563' }}
-                    >
-                      ★
-                    </span>
-                  ))}
+                <div className="flex items-center gap-2">
+                  <StarRating rating={review.rating} />
+                  <span className="text-yellow-400 font-bold">{review.rating.toFixed(1)}/10</span>
                 </div>
               </div>
               <p className="text-gray-300">{review.comment}</p>
